@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+<title>買い物メモ</title>
+<meta name="theme-color" content="#F4F6F2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&family=BIZ+UDPGothic:wght@400;700&display=swap">
+<style>
+/* Layout: 1カラムのリスト。売り場（カテゴリ）ごとにまとまり、入力バーは画面下に固定 */
+:root{
+  --bg:#F4F6F2; --surface:#FFFFFF; --fg:#1B1D1A; --muted:#6A7066; --line:#E1E5DD;
+  --veg:#23883A; --meat:#D12F27; --fish:#1B5FC4; --fruit:#E27400; --other:#1B1D1A;
+  --rec:#D12F27; --ok:#23883A;
+  --f-display:"Zen Maru Gothic","Hiragino Maru Gothic ProN","BIZ UDPGothic",sans-serif;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#131512; --surface:#1C1F1B; --fg:#ECEEE9; --muted:#9AA096; --line:#2D312B;
+  --veg:#5DC46C; --meat:#FF6A60; --fish:#6FA6FF; --fruit:#FFA43C; --other:#ECEEE9;
+  --rec:#FF6A60; --ok:#5DC46C; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#131512; --surface:#1C1F1B; --fg:#ECEEE9; --muted:#9AA096; --line:#2D312B;
+  --veg:#5DC46C; --meat:#FF6A60; --fish:#6FA6FF; --fruit:#FFA43C; --other:#ECEEE9;
+  --rec:#FF6A60; --ok:#5DC46C; color-scheme:dark }
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:17px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:14px 170px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-size:1.6rem;margin:0;letter-spacing:.02em}
+.count{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.spacer{flex:1}
+.saved{font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:4px}
+.saved::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ok)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--fish);outline-offset:2px}
+.btn-reset{background:none;border:1.5px solid var(--line);border-radius:999px;padding:6px 14px;font-size:.9rem;font-weight:700}
+.btn-reset:hover{border-color:var(--meat);color:var(--meat)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:12px 0 4px;font-size:.82rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.confirm{display:inline-flex;gap:4px;align-items:center}
+.confirm .yes{background:var(--meat);color:#fff;border:0;border-radius:999px;padding:6px 12px;font-size:.8rem;font-weight:700}
+.confirm .yes:disabled{opacity:.35;cursor:default}
+.confirm .no{background:var(--fg);color:var(--bg);border:0;border-radius:999px;padding:6px 12px;font-size:.8rem;font-weight:700;animation:blink .9s 2}
+@keyframes blink{50%{opacity:.4}}
+@media (prefers-reduced-motion:reduce){.confirm .no{animation:none}}
+section.group{margin-top:12px}
+.group h2{font-family:var(--f-display);font-size:.8rem;margin:0 0 4px;display:flex;align-items:center;gap:8px;color:var(--c)}
+.group h2 small{font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums}
+ul{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr}
+li{display:flex;align-items:center;gap:5px;padding:5px 4px 5px 7px;border-top:1px solid var(--line);min-height:36px;min-width:0}
+li:nth-child(-n+2){border-top:0}
+li:nth-child(odd){border-right:1px solid var(--line)}
+.chk{appearance:none;width:18px;height:18px;border:2px solid var(--c);border-radius:5px;flex:none;display:grid;place-content:center;cursor:pointer;background:transparent}
+.chk:checked{background:var(--c)}
+.chk:checked::after{content:"";width:5px;height:9px;border:solid var(--bg);border-width:0 2px 2px 0;transform:translate(0,-2px) rotate(45deg)}
+.name{flex:1;min-width:0;color:var(--c);font-weight:700;font-size:.65rem;line-height:1.35;overflow-wrap:anywhere;border-radius:4px;padding:1px 2px}
+li.done .name{text-decoration:line-through;opacity:.45}
+.cat{flex:none;border:1px solid var(--c);color:var(--c);background:none;border-radius:999px;font-size:.5rem;padding:1px 5px;font-weight:700}
+.del{flex:none;width:24px;height:24px;border:0;background:none;color:var(--muted);font-size:.9rem;border-radius:8px;line-height:1}
+.del:hover{background:var(--line);color:var(--fg)}
+.empty{margin-top:28px;text-align:center;color:var(--muted);line-height:1.8}
+.empty b{color:var(--fg)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.bar-in{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:8px;align-items:center}
+#txt{flex:1;min-width:0;font:inherit;font-size:1.05rem;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg)}
+.add{border:0;background:var(--fg);color:var(--bg);border-radius:12px;padding:12px 16px;font-weight:700;flex:none}
+.status{font-size:.85rem;color:var(--muted);min-height:1.3em;overflow-wrap:anywhere}
+.status.live{color:var(--rec);font-weight:700}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>買い物メモ</h1>
+    <span class="count" id="count"></span>
+    <span class="spacer"></span>
+    <span class="saved" id="saved">自動保存</span>
+    <span class="confirm"><button class="yes" id="yesBtn" type="button">全て消す</button><button class="no" id="noBtn" type="button" hidden>やめる</button></span>
+  </header>
+  <div class="legend" id="legend"></div>
+  <div id="list"></div>
+</div>
+
+<div class="bar">
+  <div class="bar-in">
+    <div class="row">
+      <input id="txt" type="text" enterkeyhint="done" autocomplete="off" placeholder="ここをタップしてキーボードのマイクで話す">
+      <button class="add" id="addBtn" type="button">追加</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+const CATS = {
+  veg:  {label:"野菜", c:"var(--veg)"},
+  meat: {label:"肉",   c:"var(--meat)"},
+  fish: {label:"魚",   c:"var(--fish)"},
+  fruit:{label:"果物", c:"var(--fruit)"},
+  other:{label:"その他", c:"var(--other)"}
+};
+const ORDER = ["veg","meat","fish","fruit","other"];
+const toHira = s => s.replace(/[ァ-ヶ]/g, ch => String.fromCharCode(ch.charCodeAt(0)-0x60));
+const KW = {
+  meat: "肉 にく 豚 ぶた 牛 ぎゅう 鶏 とり チキン ひき肉 ミンチ ハム ベーコン ソーセージ ウインナー ウィンナー ささみ 手羽 砂肝 レバー ラム ステーキ サラダチキン",
+  fish: "魚 さかな 鮭 さけ シャケ サーモン 鮪 まぐろ マグロ 鯖 さば 鯵 あじ 鰯 いわし 秋刀魚 さんま 鰤 ぶり 鱈 たら 鯛 たい かつお 鰹 うなぎ しらす じゃこ 海老 えび エビ 烏賊 いか イカ 蛸 たこ タコ あさり しじみ ほたて 帆立 牡蠣 かき カキ 刺身 さしみ 明太子 たらこ いくら 貝 ツナ ししゃも 切り身 魚卵 かに 蟹 シーフード",
+  fruit:"果物 くだもの フルーツ りんご 林檎 みかん 蜜柑 バナナ いちご 苺 ぶどう 葡萄 梨 桃 キウイ メロン すいか 西瓜 スイカ レモン グレープフルーツ パイナップル パイン 柿 さくらんぼ マンゴー アボカド ブルーベリー オレンジ ラズベリー 柚子 ゆず ライム 洋梨 ざくろ いちじく 無花果 デコポン プラム",
+  veg:  "野菜 やさい キャベツ レタス 白菜 はくさい 大根 だいこん 人参 にんじん ニンジン 玉ねぎ 玉葱 たまねぎ タマネギ 長ねぎ ねぎ ネギ 葱 じゃがいも ジャガイモ さつまいも 里芋 いも 芋 トマト きゅうり 胡瓜 キュウリ なす 茄子 ナス ピーマン パプリカ かぼちゃ 南瓜 ほうれん草 ほうれんそう 小松菜 こまつな 水菜 春菊 チンゲン菜 ブロッコリー カリフラワー もやし ごぼう 牛蒡 れんこん 蓮根 しょうが 生姜 にんにく ニンニク ニラ にら セロリ アスパラ オクラ ズッキーニ とうもろこし コーン 枝豆 えだまめ 豆苗 しそ 大葉 みょうが かぶ 蕪 きのこ しめじ えのき しいたけ 椎茸 まいたけ 舞茸 エリンギ マッシュルーム ゴーヤ 三つ葉 パクチー ベビーリーフ サラダ 貝割れ かいわれ スプラウト 絹さや いんげん 菜の花"
+};
+// 紛らわしい語（牛乳・お酒・かき氷など）は「その他」として登録し、最長一致で判定
+KW.other = "牛乳 ぎゅうにゅう 豆乳 乳 お酒 おさけ 日本酒 酒粕 かき氷 味の素 あじのもと たい焼き 卵 たまご 玉子 豆腐 納豆 醤油 ヨーグルト チーズ バター ジュース 缶詰 ふりかけ";
+const KWN = {}; for (const k in KW) KWN[k] = KW[k].split(/\s+/).map(toHira);
+// 同じ長さなら 肉→魚→その他→野菜→果物 の順（「鶏もも」を果物にしない）
+const CHECK = ["meat","fish","other","veg","fruit"];
+function guess(text){
+  const t = toHira(text);
+  let best = "other", len = 0;
+  for (const k of CHECK) for (const w of KWN[k]) if (w.length > len && t.includes(w)){ best = k; len = w.length; }
+  return best;
+}
+
+const KEY = "kaimono-memo-v1";
+let items = [];
+try { items = JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ items = []; }
+if (!Array.isArray(items)) items = [];
+let lastSaved = null;
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(items)); lastSaved = new Date(); }
+  catch(e){ lastSaved = null; }
+  const el = document.getElementById("saved");
+  if (lastSaved){ const h=lastSaved.getHours(), m=String(lastSaved.getMinutes()).padStart(2,"0"); el.textContent = `自動保存 ${h}:${m}`; }
+  else el.textContent = "この画面では保存できません";
+}
+
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const QTY = /^[0-9０-９一二三四五六七八九十百半]+[.．]?[0-9０-９]*\s*(個|こ|本|ほん|パック|袋|ふくろ|枚|まい|玉|たま|束|g|グラム|kg|キロ|切れ|尾|房|缶|l|L|リットル|ml|丁|株|箱|匹|羽|人前)?$/;
+// 自動改行：読点・スペース・改行などで1品ずつ分ける。数量だけの断片は直前の品目にくっつける
+function addText(raw){
+  const parts = raw.split(/[、,，。\n\r\t 　・／\/]+|それから|それと/).map(s=>s.trim()).filter(Boolean);
+  let added = 0, prev = null;
+  for (const p of parts){
+    if (prev && QTY.test(p)){ prev.text += " " + p; continue; }
+    const it = {id:uid(), text:p, cat:guess(p), done:false};
+    items.push(it); prev = it; added++;
+  }
+  if (added || prev){ save(); render(); }
+  return added;
+}
+
+const listEl = document.getElementById("list");
+function render(){
+  const yb = document.getElementById("yesBtn"); if (yb) yb.disabled = !items.length;
+  const left = items.filter(i=>!i.done).length;
+  document.getElementById("count").textContent = items.length ? `残り ${left} / ${items.length}` : "";
+  listEl.innerHTML = "";
+  if (!items.length){
+    listEl.innerHTML = `<div class="empty"><b>メモは空です</b><br>下のマイクを押して話すか、文字で入力してください。<br>「、」やスペースで区切ると1品ずつ行が分かれます。</div>`;
+    return;
+  }
+  for (const k of ORDER){
+    const g = items.filter(i=>i.cat===k);
+    if (!g.length) continue;
+    const sec = document.createElement("section");
+    sec.className = "group"; sec.style.setProperty("--c", CATS[k].c);
+    sec.innerHTML = `<h2>${CATS[k].label}<small>${g.filter(i=>!i.done).length}品</small></h2>`;
+    const ul = document.createElement("ul");
+    for (const it of g){
+      const li = document.createElement("li");
+      li.style.setProperty("--c", CATS[k].c);
+      if (it.done) li.classList.add("done");
+      li.innerHTML = `<input class="chk" type="checkbox" id="c-${it.id}" aria-label="買った">
+        <span class="name"></span>
+        <button class="cat" type="button" title="タップで分類を変更">${CATS[k].label}</button>
+        <button class="del" type="button" aria-label="削除">×</button>`;
+      const chk = li.querySelector(".chk"), nm = li.querySelector(".name");
+      chk.checked = it.done; nm.textContent = it.text;
+      chk.onchange = () => { it.done = chk.checked; save(); render(); };
+      li.querySelector(".cat").onclick = () => { it.cat = ORDER[(ORDER.indexOf(it.cat)+1)%ORDER.length]; save(); render(); };
+      li.querySelector(".del").onclick = () => { items = items.filter(x=>x!==it); save(); render(); };
+      ul.appendChild(li);
+    }
+    sec.appendChild(ul); listEl.appendChild(sec);
+  }
+}
+
+// 凡例
+document.getElementById("legend").innerHTML = ORDER.map(k=>`<span><i style="background:${CATS[k].c}"></i>${CATS[k].label}</span>`).join("");
+
+// 文字入力
+const txt = document.getElementById("txt");
+function submitText(){ if (txt.value.trim()){ addText(txt.value); txt.value=""; } txt.focus(); }
+document.getElementById("addBtn").onclick = submitText;
+txt.addEventListener("keydown", e => { if (e.key==="Enter" && !e.isComposing){ e.preventDefault(); submitText(); } });
+// 自動改行：「、」「。」が入った時点で、そこまでを1品ずつリストへ送る（キーボードの音声入力にも対応）
+function autoSplit(){
+  const v = txt.value, m = v.match(/^([\s\S]*[、,，。\n])([^、,，。\n]*)$/);
+  if (!m) return;
+  if (addText(m[1])) setStatus("追加しました。続けて話せます", true);
+  txt.value = m[2].trimStart();
+}
+txt.addEventListener("input", e => { if (!e.isComposing) autoSplit(); });
+txt.addEventListener("compositionend", () => setTimeout(autoSplit, 0));
+
+// リセット（画面内で確認）
+// 全て消す → 6秒間だけ「やめる」で元に戻せる
+const yesBtn = document.getElementById("yesBtn"), noBtn = document.getElementById("noBtn");
+let backup = null, uTimer = null;
+function hideUndo(){ noBtn.hidden = true; backup = null; clearTimeout(uTimer); }
+yesBtn.onclick = () => {
+  if (!items.length) return;
+  backup = items; items = []; save(); render();
+  noBtn.hidden = false; setStatus("全て消しました。「やめる」で元に戻せます");
+  clearTimeout(uTimer); uTimer = setTimeout(hideUndo, 6000);
+};
+noBtn.onclick = () => { if (backup){ items = backup; save(); render(); setStatus("元に戻しました"); } hideUndo(); };
+
+// 案内表示
+const statusEl = document.getElementById("status");
+function setStatus(t, live){ statusEl.textContent = t; statusEl.classList.toggle("live", !!live); }
+setStatus("キーボードのマイクで話せます。「てん」と言うと1品ずつ行が分かれます");
+
+render(); save();
+})();
+</script>
+
+<script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
+</body>
+</html>
